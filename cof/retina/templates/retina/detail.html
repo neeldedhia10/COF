@@ -1,0 +1,22 @@
+
+<h1> {{ patient.patient_id }} </h1>
+<h2> {{ patient.patient_name }} </h2>
+
+{%  load static  %}
+
+
+{% if error_message %}
+    <p><strong>{{ error_message} </strong></p>
+{% endif  %}
+
+
+<form action="{% url 'retina:process' patient_id %}" method = "POST">
+     <!--  Above img src Load image corresponding to this patient_id -->
+     <img src = "{%  static pid_imgfn %}" alt = "Retinal image" > <br>
+     <input  type="radio" id="right_eye" name = "right" value="True">
+     <label for="right_eye">
+         {{"Right Eye"}}
+     </label> <br>
+     <input type="submit" value = "next">
+</form>
+
