@@ -4,6 +4,7 @@
 from django.http import HttpResponse
 from django.template import loader
 from django.shortcuts import render, get_object_or_404
+from django.contrib.auth.decorators import login_required
 from .models import Patient
 from os import walk
 import pathlib
@@ -23,6 +24,8 @@ from retina. resources import PatientResource
 
 static_path = settings.STATIC_PATH
 
+
+@login_required
 def index(request):
     # ASSUMPTION: All files in static folder have an entry in db with filename as the patient_id (primary key)
     all_patients = Patient.objects.all()
@@ -34,7 +37,7 @@ def index(request):
             all_over = False
             curr_patient = all_patients[i]
             break
-    print("i = " + str(i))
+    # print("i = " + str(i))
     if all_over == True:
         return HttpResponse("<h2> All patients are annotated! </h2>")
     else:
@@ -88,6 +91,7 @@ def index(request):
         return HttpResponse(template.render(context, request))
 
 
+@login_required
 def cf(request):
     if request.method == 'POST':
         is_back = 'is_back' in request.POST and request.POST.get('is_back')
@@ -96,14 +100,15 @@ def cf(request):
         patient = Patient.objects.get(patient_id=patient_id)
         pid_imgfn = os.path.join(patient_id + ".jpg")
 
-        if is_back == "0":
-            my_x = 'my_x' in request.POST and request.POST.get('my_x')
-            my_y = 'my_y' in request.POST and request.POST.get('my_y')
-            # Save the OD centers
-            patient.od_x = my_x
-            patient.od_y = my_y
-            patient.save()
-            # is_back = "0"
+        # if is_back == "0":
+        my_x = 'my_x' in request.POST and request.POST.get('my_x')
+        my_y = 'my_y' in request.POST and request.POST.get('my_y')
+        # Save the OD centers
+        patient.od_x = my_x
+        patient.od_y = my_y
+
+        patient.save()
+        # is_back = "0"
         my_x = patient.cf_x
         my_y = patient.cf_y
         template = loader.get_template('retina/cof.html')
@@ -111,6 +116,139 @@ def cf(request):
             'patient_id': patient_id, 'pid_imgfn': pid_imgfn, 'is_back': is_back, 'my_x': my_x, 'my_y': my_y
         }
         return HttpResponse(template.render(context, request))
+
+# Save VH data
+
+
+@login_required
+def last(request):
+    if request.method == 'POST':
+        # Last page so no need to check for is_back
+        # is_back = 'is_back' in request.POST and request.POST.get('is_back')
+        patient_id = 'patient_id' in request.POST and request.POST.get(
+            'patient_id')
+        patient = Patient.objects.get(patient_id=patient_id)
+        pid_imgfn = os.path.join(patient_id + ".jpg")
+
+        # if is_back == "0":
+        my_x = 'my_x' in request.POST and request.POST.get('my_x')
+        my_y = 'my_y' in request.POST and request.POST.get('my_y')
+        # Save the OD centers
+        patient.od_x = my_x
+        patient.od_y = my_y
+        patient.is_processed = True
+        patient.under_process = False
+        patient.save()
+        # Now save this patient onto a csv
+        # csv_write(patient_id)
+        all_patients = Patient.objects.all()
+        count = all_patients.count()
+        print("Count in ma = : " + str(all_patients.count()))
+        all_over = True
+        for i in range(count):
+            if all_patients[i].is_processed == False:
+                all_over = False
+                curr_patient = all_patients[i]
+                break
+        # print("i = " + str(i))
+
+        if all_over == True:
+            patient_resource = PatientResource()
+            dataset = patient_resource.export()
+            wb = Workbook()
+            ws = wb.active
+            dateTimeObj = datetime.now()
+            timestampStr = dateTimeObj.strftime("%d%b%Y%H%M%S")
+            title = "Database" + "_" + str(timestampStr)
+            ws.title = "Annotation"
+            field_names = patient_resource.get_fields()
+            print(field_names)
+
+            for row in dataset:
+                ws.append(row)
+
+            fname = title + ".xlsx"
+            wb.save(fname)
+            return HttpResponse("<h2> All patients are annotated! </h2>")
+        else:
+            curr_patient = all_patients[i]
+            patient_id = curr_patient.patient_id
+            pid_imgfn = os.path.join(patient_id + ".jpg")
+
+            # Get image dimensions
+            pp = Patient.objects.get(patient_id=patient_id)
+            im = Image.open(os.path.join(static_path, pid_imgfn))
+            width, height = im.size
+            print("width = " + str(width))
+            print("height = " + str(height))
+            pp.width = width
+            pp.height = height
+            pp.save()
+            template = loader.get_template('retina/index.html')
+            context = {
+                'patient_id': patient_id, 'pid_imgfn': pid_imgfn
+            }
+            return HttpResponse(template.render(context, request))
+
+
+def csv_write(patient_id):
+    patient = Patient.objects.get(patient_id=patient_id)
+    fields = ['Patient ID', 'WIDTH', 'HEIGHT', 'OD_X', 'OD_Y', 'CF_X', 'CF_Y',
+              'MA_X', 'MA_Y', 'MA_R',
+              'RH_X', 'RH_Y', 'RH_R',
+              'HE_X', 'HE_Y', 'HE_R',
+              'CWS_X', 'CWS_Y', 'CWS_R',
+              'NVE_X', 'NVE_Y', 'NVE_R',
+              'NVD_X, NVD_Y',  'NVD_R',
+              'SH_X', 'SH_Y', 'SH_R',
+              'VH_X', 'VH_Y', 'VH_R',
+              'Comment', 'PROCESSED', 'UnderProcess']
+    row = ([patient.patient_id,  patient.width, patient.height, patient.od_x, patient.od_y, patient.cf_x, patient.cf_y,
+           patient.ma_x, patient.ma_y, patient.ma_r,
+           patient.rh_x, patient.rh_y, patient.rh_r,
+           patient.he_x, patient.he_y, patient.he_r,
+           patient.cws_x, patient.cws_y, patient.cws_r,
+           patient.nve_x, patient.nve_y, patient.nve_r,
+           patient.nvd_x, patient.nvd_y, patient.nvd_r,
+           patient.sh_x, patient.sh_y, patient.sh_r,
+           patient.vh_x, patient.vh_y, patient.vh_r,
+           patient.comment, patient.is_processed, patient.under_process])
+    fname = "./" + patient_id + ".csv"
+    with open(fname, 'w') as csvfile:
+        # creating a csv writer object
+        csvwriter = csv.writer(csvfile, lineterminator='\n')
+        # writing the fields
+        print(row)
+        for elem in row:
+            csvwriter.writerow([elem])
+
+
+def detail(request, patient_id):
+    # print("HK  " + str(pid))
+    # myobj = Patient.objects.filter(patient_id= pid)
+    patient = get_object_or_404(Patient, pk=patient_id)
+    # Send the patient image filename along with ... ?
+    pid_imgfn = str(static_path + "/" + patient_id + ".jpg")
+    print("Pid : " + patient_id)
+    print("Patient.patient_id = " + patient_id)
+    # print("Patient.patient_name = " + patient.patient_name)
+    print("pid_imgfn = " + pid_imgfn)
+    return render(request, 'retina/detail.html', {'patient': patient, 'pid_imgfn': pid_imgfn})
+
+
+def process(request, patient_id):
+    patient = get_object_or_404(Patient, pk=patient_id)
+    try:
+        selected = patient(pk=request.POST['right'])
+    except KeyError:
+        return render(request, 'retina/detail.html', {
+            'patient_id': patient_id,
+            'error_message': "Error in selection",
+        })
+    else:
+        selected.is_right = True
+        selected.save()
+        return render(request, 'retina/detail.html', {'patient_id': patient_id})
 
 
 # Save CF data
@@ -377,147 +515,3 @@ def vh(request):
             'my_r': my_r
         }
         return HttpResponse(template.render(context, request))
-
-
-# Save VH data
-def last(request):
-    if request.method == 'POST':
-        # Last page so no need to check for is_back
-        my_x = 'my_x' in request.POST and request.POST.get('my_x')
-        my_y = 'my_y' in request.POST and request.POST.get('my_y')
-        my_r = 'my_r' in request.POST and request.POST.get('my_r')
-        is_back = 'is_back' in request.POST and request.POST.get('is_back')
-
-        my_comment = 'my_comment' in request.POST and request.POST.get(
-            'my_comment')
-        patient_id = 'patient_id' in request.POST and request.POST.get(
-            'patient_id')
-        pid_imgfn = os.path.join(patient_id + ".jpg")
-        print("my_x" + my_x)
-        print("my_y" + my_y)
-        print(patient_id)
-        print(pid_imgfn)
-        print("Comments : " + my_comment)
-
-        # Save the VH centers
-        patient = Patient.objects.get(patient_id=patient_id)
-        patient.vh_x = my_x
-        patient.vh_y = my_y
-        patient.vh_r = my_r
-
-        patient.comment = my_comment
-
-        # Block for last web page, make is_processed = true and get next patient id
-        patient.is_processed = True
-        patient.under_process = False
-        patient.save()
-        # Now save this patient onto a csv
-        csv_write(patient_id)
-        all_patients = Patient.objects.all()
-        count = all_patients.count()
-        print("Count in ma = : " + str(all_patients.count()))
-        all_over = True
-        for i in range(count):
-            if all_patients[i].is_processed == False:
-                all_over = False
-                curr_patient = all_patients[i]
-                break
-        print("i = " + str(i))
-
-        if all_over == True:
-            patient_resource = PatientResource()
-            dataset = patient_resource.export()
-            wb = Workbook()
-            ws = wb.active
-            dateTimeObj = datetime.now()
-            timestampStr = dateTimeObj.strftime("%d%b%Y%H%M%S")
-            title = "Database" + "_" + str(timestampStr)
-            ws.title = "Annotation"
-            field_names = patient_resource.get_fields()
-            print(field_names)
-
-            for row in dataset:
-                ws.append(row)
-
-            fname = title + ".xlsx"
-            wb.save(fname)
-            return HttpResponse("<h2> All patients are annotated! </h2>")
-        else:
-            curr_patient = all_patients[i]
-            patient_id = curr_patient.patient_id
-            pid_imgfn = os.path.join(patient_id + ".jpg")
-
-            # Get image dimensions
-            pp = Patient.objects.get(patient_id=patient_id)
-            im = Image.open(os.path.join(static_path, pid_imgfn))
-            width, height = im.size
-            print("width = " + str(width))
-            print("height = " + str(height))
-            pp.width = width
-            pp.height = height
-            pp.save()
-            template = loader.get_template('retina/index.html')
-            context = {
-                'patient_id': patient_id, 'pid_imgfn': pid_imgfn, 'is_back': is_back
-            }
-            return HttpResponse(template.render(context, request))
-
-
-def csv_write(patient_id):
-    patient = Patient.objects.get(patient_id=patient_id)
-    fields = ['Patient ID', 'WIDTH', 'HEIGHT', 'OD_X', 'OD_Y', 'CF_X', 'CF_Y',
-              'MA_X', 'MA_Y', 'MA_R',
-              'RH_X', 'RH_Y', 'RH_R',
-              'HE_X', 'HE_Y', 'HE_R',
-              'CWS_X', 'CWS_Y', 'CWS_R',
-              'NVE_X', 'NVE_Y', 'NVE_R',
-              'NVD_X, NVD_Y',  'NVD_R',
-              'SH_X', 'SH_Y', 'SH_R',
-              'VH_X', 'VH_Y', 'VH_R',
-              'Comment', 'PROCESSED', 'UnderProcess']
-    row = ([patient.patient_id,  patient.width, patient.height, patient.od_x, patient.od_y, patient.cf_x, patient.cf_y,
-           patient.ma_x, patient.ma_y, patient.ma_r,
-           patient.rh_x, patient.rh_y, patient.rh_r,
-           patient.he_x, patient.he_y, patient.he_r,
-           patient.cws_x, patient.cws_y, patient.cws_r,
-           patient.nve_x, patient.nve_y, patient.nve_r,
-           patient.nvd_x, patient.nvd_y, patient.nvd_r,
-           patient.sh_x, patient.sh_y, patient.sh_r,
-           patient.vh_x, patient.vh_y, patient.vh_r,
-           patient.comment, patient.is_processed, patient.under_process])
-    fname = "./" + patient_id + ".csv"
-    with open(fname, 'w') as csvfile:
-        # creating a csv writer object
-        csvwriter = csv.writer(csvfile, lineterminator='\n')
-        # writing the fields
-        print(row)
-        for elem in row:
-            csvwriter.writerow([elem])
-
-
-def detail(request, patient_id):
-    # print("HK  " + str(pid))
-    # myobj = Patient.objects.filter(patient_id= pid)
-    patient = get_object_or_404(Patient, pk=patient_id)
-    # Send the patient image filename along with ... ?
-    pid_imgfn = str(static_path + "/" + patient_id + ".jpg")
-    print("Pid : " + patient_id)
-    print("Patient.patient_id = " + patient_id)
-    # print("Patient.patient_name = " + patient.patient_name)
-    print("pid_imgfn = " + pid_imgfn)
-    return render(request, 'retina/detail.html', {'patient': patient, 'pid_imgfn': pid_imgfn})
-
-
-def process(request, patient_id):
-    patient = get_object_or_404(Patient, pk=patient_id)
-    try:
-        selected = patient(pk=request.POST['right'])
-    except KeyError:
-        return render(request, 'retina/detail.html', {
-            'patient_id': patient_id,
-            'error_message': "Error in selection",
-        })
-    else:
-        selected.is_right = True
-        selected.save()
-        return render(request, 'retina/detail.html', {'patient_id': patient_id})

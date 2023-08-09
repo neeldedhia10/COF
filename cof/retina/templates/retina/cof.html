@@ -53,7 +53,7 @@
     <script>
         var pid_imgfn = "{% static pid_imgfn %}";
         var patient_id = "{{ patient_id }}";
-        var is_back = "{{ is_back }}";
+        // var is_back = "{{ is_back }}";
         var my_x = "{{ my_x }}";
         var my_y = "{{ my_y }}";
 
@@ -69,12 +69,12 @@
     {% if patient_id  %}
         <form id="cfform" action="{% url  'retina:ma' %}"  method="post"  >
             {% csrf_token %}
-            <canvas id="imgCanvas" width="1016" height="1016"  onclick="canvasClick()" style="border:1px solid #000000;"></canvas>
+            <canvas id="imgCanvas" width="10" height="10"  onclick="canvasClick()" style="border:1px solid #000000;"></canvas>
             <!--<img id="pimg" src = "{%  static pid_imgfn  %}" alt = "description" width="1016" height="1016">
             -->
           <div id="hidethis" class = mydiv>
             <!--<label for="my_x" >X: </label>-->
-            <input type="hidden"  id="is_back" name="is_back" value = "0">
+            <!-- <input type="hidden"  id="is_back" name="is_back" value = "0"> -->
 
                 <!--<label for="my_x" >X: </label>-->
             <input type="hidden"  id="my_x" name="my_x" >
@@ -106,8 +106,9 @@
 
         function draw() {
             img_buffer.onload = function() {
-                //img_buffer.width = img_buffer.width/4;
-                //img_buffer.height = img_buffer.height/4;
+                img_buffer.width = img_buffer.width/4;
+                img_buffer.height = img_buffer.height/4;
+                
                 imgWidth = img_buffer.width;
                 imgHeight = img_buffer.height;
                 canvas.width = imgWidth;

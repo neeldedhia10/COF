@@ -2,12 +2,27 @@
 # Copyrights 2020,  Sankara Netralaya & BITS Pilani,
 # Contact: sundaresan.raman@pilani.bits-pilani.ac.in
 -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <!-- loads the path to your staticfiles -->
     {%  load static  %}
     <!--{{pid_imgfn}} -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    
+    <link rel="stylesheet" type="text/css" href="{% static 'users/main.css' %}">
+    
+    {% if title %}
+    <title> {{ title }}</title>
+    {% else %}
+    <title>OPTUS Images Center Identification</title>
+    {% endif %}
 
 <style>
         .button {
@@ -49,31 +64,51 @@
 
     </style>
 
-
-
     <script src = "/static/jquery.min.js">
     </script>
     <script>
     var pid_imgfn = "{% static pid_imgfn %}";
     var patient_id = "{{ patient_id }}" ;
-    var is_back = "{{ is_back }}"
+    // var is_back = "{{ is_back }}"
     </script>
 
 </head>
 
 <body onload="draw();">
-
+    <header class="site-header">
+        <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
+            <div class="container">
+                <a class="navbar-brand mr-4" href="{% url 'retina:index' %}">Main Page</a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle"
+                    aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarToggle">
+                    <!-- Navbar Right Side -->
+                    <div class="navbar-nav">
+                        {% if user.is_authenticated %}
+                        <a class="nav-item nav-link" href="{% url 'profile' %}">Profile</a>
+                        <a class="nav-item nav-link" href="{% url 'logout' %}">Logout</a>
+                        {% else %}
+                        <a class="nav-item nav-link" href="{% url 'login' %}">Login</a>
+                        <a class="nav-item nav-link" href="{% url 'register' %}">Register</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
 <h1> Patient Id: <strong> {{ patient_id }}  </strong> </h1>
 <h1><p id = "od_text">Please Choose Optic Disk Center by clicking on the image: </p></h1>
     {% if patient_id  %}
-        <form id="odform" action="{% url  'retina:cf' %}"  method="post"  >
+        <form id="odform" action="{% url  'retina:last' %}"  method="post"  >
             {% csrf_token %}
             <canvas id="imgCanvas" width="1016" height="1016"  onclick="canvasClick()" style="border:1px solid #000000;"></canvas>
             <!--<img id="pimg" src = "{%  static pid_imgfn  %}" alt = "description" width="1016" height="1016">
             -->
         <div id="hidethis" class = mydiv>
             <!--<label for="my_x" >X: </label>-->
-            <input type="hidden"  id="is_back" name="is_back" value = "0">
+            <!-- <input type="hidden"  id="is_back" name="is_back" value = "0"> -->
 
                 <!--<label for="my_x" >X: </label>-->
             <input type="hidden"  id="my_x" name="my_x" >
@@ -102,8 +137,8 @@
             img_buffer.onload = function() {
                 //img_buffer.width = img_buffer.width/4;
                 //img_buffer.height = img_buffer.height/4;
-                imgWidth = img_buffer.width;
-                imgHeight = img_buffer.height;
+                imgWidth = img_buffer.width/5;
+                imgHeight = img_buffer.height/5;
                 canvas.width = imgWidth;
                 canvas.height = imgHeight;
                 context.drawImage(img_buffer, 0, 0, imgWidth, imgHeight);

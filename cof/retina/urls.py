@@ -7,7 +7,7 @@ from django.conf import settings
 from django.conf.urls import include
 from . import views
 from django.contrib import admin
-from django.urls import re_path
+from django.urls import re_path, path
 
 
 app_name = 'retina'
@@ -16,6 +16,7 @@ app_name = 'retina'
 urlpatterns = [
     # /retina/
     re_path(r'^$', views.index, name='index'),
+    path('', views.index, name='index'),
 
     # /retina/cf/
     re_path(r'^cf/', views.cf, name='cf'),
@@ -51,7 +52,8 @@ urlpatterns = [
     re_path(r'^(?P<patient_id>[0-9]+)/$', views.detail, name='detail'),
 
     # /retina/<patient_id>/process/
-    re_path(r'^(?P<patient_id>[0-9]+)/process/$', views.process, name='process'),
+    re_path(r'^(?P<patient_id>[0-9]+)/process/$',
+            views.process, name='process'),
 
 ]
 
