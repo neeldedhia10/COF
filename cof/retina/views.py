@@ -45,14 +45,15 @@ def index(request):
         patient_id = curr_patient.patient_id
         up = Patient.objects.get(patient_id=patient_id)
         up.under_process = True
-        pid_imgfn = os.path.join(patient_id + ".jpg")
+        pid_imgfn = curr_patient.link
+        # pid_imgfn = os.path.join(patient_id + ".jpg")
         # Get image dimensions
-        im = Image.open(os.path.join(static_path, pid_imgfn))
-        width, height = im.size
-        print("width = " + str(width))
-        print("height = " + str(height))
-        up.width = width
-        up.height = height
+        # im = Image.open(os.path.join(static_path, pid_imgfn))
+        # width, height = im.size
+        # print("width = " + str(width))
+        # print("height = " + str(height))
+        # up.width = width
+        # up.height = height
 
         up.save()
 
@@ -68,10 +69,9 @@ def last(request):
     if request.method == 'POST':
         # Last page so no need to check for is_back
         # is_back = 'is_back' in request.POST and request.POST.get('is_back')
-        patient_id = 'patient_id' in request.POST and request.POST.get(
-            'patient_id')
+        patient_id = 'patient_id' in request.POST and request.POST.get('patient_id')
         patient = Patient.objects.get(patient_id=patient_id)
-        pid_imgfn = os.path.join(patient_id + ".jpg")
+        # pid_imgfn = os.path.join(patient_id + ".jpg")
 
         # if is_back == "0":
         my_x = 'my_x' in request.POST and request.POST.get('my_x')
@@ -116,16 +116,16 @@ def last(request):
         else:
             curr_patient = all_patients[i]
             patient_id = curr_patient.patient_id
-            pid_imgfn = os.path.join(patient_id + ".jpg")
+            pid_imgfn = curr_patient.link
 
             # Get image dimensions
             pp = Patient.objects.get(patient_id=patient_id)
-            im = Image.open(os.path.join(static_path, pid_imgfn))
-            width, height = im.size
-            print("width = " + str(width))
-            print("height = " + str(height))
-            pp.width = width
-            pp.height = height
+            # im = Image.open(os.path.join(static_path, pid_imgfn))
+            # width, height = im.size
+            # print("width = " + str(width))
+            # print("height = " + str(height))
+            # pp.width = width
+            # pp.height = height
             pp.save()
             template = loader.get_template('retina/index.html')
             context = {

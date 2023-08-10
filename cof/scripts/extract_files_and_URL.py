@@ -55,7 +55,7 @@ with open('image_links.csv', 'w', newline='', encoding='utf-8') as csvfile:
 
     for file in all_files:
         file_name = file['name']
-        sharing_link = file['webViewLink']
-        csvwriter.writerow([file_name, sharing_link])
+        file_id = file['id']
+        csvwriter.writerow([file_name, file_id])
 
 print("CSV file created successfully.")

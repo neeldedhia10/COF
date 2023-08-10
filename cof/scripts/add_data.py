@@ -8,7 +8,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'cof.settings')
 
 # Path to your CSV file
 csv_file_path = 'scripts/sorted_image_links.csv'
-
+Patient.objects.all().delete()
 # Read the CSV file and populate data
 with open(csv_file_path, 'r', newline='', encoding='utf-8') as csvfile:
     reader = csv.reader(csvfile)
