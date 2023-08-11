@@ -68,7 +68,7 @@
     </script>
     <script>
     var pid_imgfn = "{{ pid_imgfn }}";
-    var patient_id = "{{ patient_id }}" ;
+    var patient_id = "{{ patient_id }}";
     // var is_back = "{{ is_back }}"
     </script>
 
@@ -98,12 +98,13 @@
             </div>
         </nav>
     </header>
-<h1> Patient Id: <strong> {{ patient_id }}  </strong> </h1>
+<h1> Patient ID: <strong> {{ patient_id }} </strong> </h1>    
+<h1> Link: <strong> {{ pid_imgfn }}  </strong> </h1>
 <h1><p id = "od_text">Please Choose Optic Disk Center by clicking on the image: </p></h1>
     {% if patient_id  %}
         <form id="odform" action="{% url  'retina:last' %}"  method="post"  >
             {% csrf_token %}
-            <canvas id="imgCanvas" width="1016" height="1016"  onclick="canvasClick()" style="border:1px solid #000000;"></canvas>
+            <canvas id="imgCanvas" width="1500" height="1500"  onclick="canvasClick()" style="border:1px solid #000000;"></canvas>
             <!--<img id="pimg" src = "{%  static pid_imgfn  %}" alt = "description" width="1016" height="1016">
             -->
         <div id="hidethis" class = mydiv>
@@ -128,6 +129,7 @@
         <h2> There are no more patients/images!</h2>
     {% endif  %}
     <script>
+        console.log(pid_imgfn);
         var canvas = document.getElementById("imgCanvas");
         var context = canvas.getContext("2d");
         var img_buffer = document.createElement('img');
@@ -137,13 +139,16 @@
             img_buffer.onload = function() {
                 //img_buffer.width = img_buffer.width/4;
                 //img_buffer.height = img_buffer.height/4;
-                imgWidth = img_buffer.width/5;
-                imgHeight = img_buffer.height/5;
+                imgWidth = img_buffer.width;
+                imgHeight = img_buffer.height;
                 canvas.width = imgWidth;
                 canvas.height = imgHeight;
                 context.drawImage(img_buffer, 0, 0, imgWidth, imgHeight);
-             };
-            img_buffer.src = pid_imgfn;
+            };
+            
+            var img_url = pid_imgfn.replace(/&amp;/g, '&');
+            img_buffer.src = img_url;
+            console.log(pid_imgfn);
         }
         // Mouse Position
         canvas.addEventListener("click", function (evt) {
