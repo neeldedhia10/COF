@@ -11,7 +11,7 @@ class Patient(models.Model):
     link = models.CharField(max_length=500, default='')
     od_x = models.IntegerField(default='0')
     od_y = models.IntegerField(default='0')
-
+    
     is_processed = models.BooleanField(default=False)
     under_process = models.BooleanField(default=False)
 

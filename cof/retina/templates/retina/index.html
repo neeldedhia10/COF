@@ -99,7 +99,7 @@
         </nav>
     </header>
 <h1> Patient ID: <strong> {{ patient_id }} </strong> </h1>    
-<h1> Link: <strong> {{ pid_imgfn }}  </strong> </h1>
+<!-- <h1> Link: <strong> {{ pid_imgfn }}  </strong> </h1> -->
 <h1><p id = "od_text">Please Choose Optic Disk Center by clicking on the image: </p></h1>
     {% if patient_id  %}
         <form id="odform" action="{% url  'retina:last' %}"  method="post"  >
@@ -139,8 +139,8 @@
             img_buffer.onload = function() {
                 //img_buffer.width = img_buffer.width/4;
                 //img_buffer.height = img_buffer.height/4;
-                imgWidth = img_buffer.width;
-                imgHeight = img_buffer.height;
+                imgWidth = img_buffer.width/4;
+                imgHeight = img_buffer.height/4;
                 canvas.width = imgWidth;
                 canvas.height = imgHeight;
                 context.drawImage(img_buffer, 0, 0, imgWidth, imgHeight);
