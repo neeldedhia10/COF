@@ -30,6 +30,7 @@ def index(request):
     # ASSUMPTION: All files in static folder have an entry in db with filename as the patient_id (primary key)
     all_patients = Patient.objects.all()
     count = all_patients.count()
+
     # print("Count  = : " + str(all_patients.count()))
     all_over = True
     for i in range(count):
@@ -64,12 +65,14 @@ def index(request):
         }
         return HttpResponse(template.render(context, request))
 
+
 @login_required
 def last(request):
     if request.method == 'POST':
         # Last page so no need to check for is_back
         # is_back = 'is_back' in request.POST and request.POST.get('is_back')
-        patient_id = 'patient_id' in request.POST and request.POST.get('patient_id')
+        patient_id = 'patient_id' in request.POST and request.POST.get(
+            'patient_id')
         patient = Patient.objects.get(patient_id=patient_id)
         # pid_imgfn = os.path.join(patient_id + ".jpg")
 
@@ -77,6 +80,8 @@ def last(request):
         my_x = 'my_x' in request.POST and request.POST.get('my_x')
         my_y = 'my_y' in request.POST and request.POST.get('my_y')
         # Save the OD centers
+        user = request.user
+        patient.username = user.username
         patient.od_x = my_x
         patient.od_y = my_y
         patient.is_processed = True
@@ -132,5 +137,3 @@ def last(request):
                 'patient_id': patient_id, 'pid_imgfn': pid_imgfn
             }
             return HttpResponse(template.render(context, request))
-
-
